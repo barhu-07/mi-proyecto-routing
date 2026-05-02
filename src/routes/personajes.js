@@ -1,68 +1,103 @@
 const express = require('express');
-const { personajes, habilidades } = require('../data/datosJuego');
+const { Personaje, Habilidad } = require('../../models');
 
 const router = express.Router();
 
-router.get('/', (req, res) => {
-  const { nombre, tipo } = req.query;
-  let resultado = personajes;
+// GET /api/personajes
+router.get('/', async (req, res, next) => {
+  try {
+    const { nombre } = req.query;
 
-  if (nombre) {
-    const n = nombre.toLowerCase();
-    resultado = resultado.filter(p => p.nombre.toLowerCase().includes(n));
+    const where = {};
+
+    if (nombre) {
+      where.nombre = nombre;
+    }
+
+    const personajes = await Personaje.findAll({
+      where,
+      include: [
+        {
+          model: Habilidad,
+          through: { attributes: ['nivel'] }
+        }
+      ]
+    });
+
+    res.status(200).json(personajes);
+  } catch (err) {
+    next(err);
   }
-
-  if (tipo) {
-    resultado = resultado.filter(p => p.tipo.toLowerCase() === tipo.toLowerCase());
-  }
-
-  res.status(200).json(resultado);
 });
 
 
-router.get('/:id', (req, res) => {
-  const id = Number(req.params.id);
-  const personaje = personajes.find(p => p.id === id);
+// GET /api/personajes/:id
+router.get('/:id', async (req, res, next) => {
+  try {
+    const personaje = await Personaje.findByPk(req.params.id, {
+      include: [
+        {
+          model: Habilidad,
+          through: { attributes: ['nivel'] }
+        }
+      ]
+    });
 
-  if (!personaje) {
-    return res.status(404).json({ error: 'Personaje no encontrado' });
+    if (!personaje) {
+      return res.status(404).json({ error: 'Personaje no encontrado' });
+    }
+
+    res.status(200).json(personaje);
+  } catch (err) {
+    next(err);
   }
-
-  res.status(200).json(personaje);
 });
 
-router.post('/', (req, res) => {
-  const nuevo = { id: personajes.length + 1, ...req.body };
-  personajes.push(nuevo);
 
-  res.status(201).json(nuevo);
-});
-
-router.get('/:id/habilidades', (req, res) => {
-  const id = Number(req.params.id);
-  const personaje = personajes.find(p => p.id === id);
-
-  if (!personaje) {
-    return res.status(404).json({ error: 'Personaje no encontrado' });
+// POST /api/personajes
+router.post('/', async (req, res, next) => {
+  try {
+    const nuevo = await Personaje.create(req.body);
+    res.status(201).json(nuevo);
+  } catch (err) {
+    next(err);
   }
-
-  const suyas = habilidades.filter(h => personaje.habilidades.includes(h.id));
-
-  res.status(200).json(suyas);
 });
+
+
+// GET /api/personajes/:id/habilidades
+router.get('/:id/habilidades', async (req, res, next) => {
+  try {
+    const personaje = await Personaje.findByPk(req.params.id, {
+      include: [Habilidad]
+    });
+
+    if (!personaje) {
+      return res.status(404).json({ error: 'Personaje no encontrado' });
+    }
+
+    res.status(200).json(personaje.Habilidads);
+  } catch (err) {
+    next(err);
+  }
+});
+
 
 // DELETE /api/personajes/:id
-router.delete('/:id', (req, res) => {
-  const id = Number(req.params.id);
-  const indice = personajes.findIndex(p => p.id === id);
+router.delete('/:id', async (req, res, next) => {
+  try {
+    const eliminado = await Personaje.destroy({
+      where: { id: req.params.id }
+    });
 
-  if (indice === -1) {
-    return res.status(404).json({ error: 'Personaje no encontrado error 404' });
+    if (!eliminado) {
+      return res.status(404).json({ error: 'Personaje no encontrado' });
+    }
+
+    res.status(204).send();
+  } catch (err) {
+    next(err);
   }
-
-  personajes.splice(indice, 1);
-
-  res.status(204).send();
 });
 
 module.exports = router;
