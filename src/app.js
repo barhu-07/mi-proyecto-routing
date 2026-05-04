@@ -3,8 +3,10 @@ require('dotenv').config();
 const express = require('express');
 const { sequelize } = require('../models');
 
+
 const personajesRouter = require('./routes/personajes');
 const habilidadesRouter = require('./routes/habilidades');
+const usuariosRouter = require('./routes/usuarios');
 
 const app = express();
 
@@ -12,8 +14,10 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
+
 app.use('/api/personajes', personajesRouter);
 app.use('/api/habilidades', habilidadesRouter);
+app.use('/api/usuarios', usuariosRouter);
 
 // Middleware 404
 app.use((req, res) => {
