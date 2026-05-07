@@ -22,7 +22,6 @@ app.use(requestLogger);
 app.use(sanitizeIds);
 
 app.use('/api/personajes', personajesRouter);
-app.use('/api/habilidades', habilidadesRouter);
 app.use('/api/usuarios', usuariosRouter);
 
 // Middleware 404
