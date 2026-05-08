@@ -1,6 +1,6 @@
 const express = require('express');
 
-const ctrl = require('../controllers/personajes.controllers');
+const ctrl = require('../controllers/personajes.controller');
 const {
   createPersonajeRules,
   updatePersonajeRules,
