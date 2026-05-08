@@ -24,7 +24,12 @@ module.exports = (req, res, next) => {
   const originalJson = res.json.bind(res);
 
   res.json = (body) => {
-    return originalJson(stripIdSuffixes(body));
+    try {
+      return originalJson(stripIdSuffixes(body));
+    } catch (err) {
+      // Si algo falla al sanitizar, no rompemos la respuesta
+      return originalJson(body);
+    }
   };
 
   next();
